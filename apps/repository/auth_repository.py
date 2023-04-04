@@ -21,8 +21,9 @@ class AuthRepository:
                     User.is_active.label("user_active"),
                     User.church_id,
                     User.sub_detachment_id,
-                   User.password
-                ).filter(User.username==username).where(User.rol_id==Rol.id).first()
+                    User.password,
+                    Church.name.label("church_name"),
+                ).join(Rol).join(Church).filter(User.username==username).where(User.rol_id==Rol.id).first()
             return user
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e.args[0]}")

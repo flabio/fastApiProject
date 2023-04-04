@@ -18,6 +18,9 @@ def create_access_token(user):
             "user_id": user.id,
             "rol_name": user.rol_name,
             "church_id": user.church_id,
+            "church_name": user.church_name,
+            "detachment_name":user.sub_detachment_id,
+            
             "sub_detachment_id":user.sub_detachment_id,
             "user_active": user.user_active,
             "exp": datetime.utcnow() + timedelta(minutes=120),

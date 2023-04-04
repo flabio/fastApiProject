@@ -6,7 +6,8 @@ from apps.model.city_model import City
 from apps.model.sub_detachment_model import SubDetachment
 from apps.utils import config_page
 from sqlalchemy import func
-
+from faker import Faker
+fake = Faker()
 class ScoutRepository:
 
     async def all_scouts(sub_detachment_id:int,name:str,page:int,limite:int,db):
@@ -18,7 +19,6 @@ class ScoutRepository:
             if limite==0:
                 limite =10
 
-           
             page_total= config_page.page_total_cell(count_query,limite)
             res = db.query(
                
@@ -34,7 +34,7 @@ class ScoutRepository:
                     Church.name.label("church_name"),
                     SubDetachment.name.label("sub_detachment_name"),
                    SubDetachment.image.label("sub_detachment_image"),
-                ).join(Rol).join(Church).join(SubDetachment).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13)
+                ).join(Rol).join(Church).join(SubDetachment).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).order_by(User.id.desc())
             if name==None:
                 res= res.offset(page_offset).limit(limite).all()
             else:    
@@ -64,6 +64,7 @@ class ScoutRepository:
                     User.hobbies_interests,
                     User.allergies,
                     City.name.label("city_name"),
+                    User.city_id,
                     Rol.name.label("rol_name"),
                     Church.name.label("church_name"),
                     SubDetachment.name.label("sub_detachment_name"),
@@ -74,9 +75,41 @@ class ScoutRepository:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
-    async def create_user(user, db):
+    
+    async def scout_find_by_id(id:int,sub_detachment_id:int,db):
         try:
-            new_user = User(**user.dict())
+            res = db.query(
+                    User.id,
+                    User.first_name,
+                    User.last_name,
+                    User.identification,
+                    User.type_identification,
+                    User.direction,
+                    User.department_name,
+                    User.location_name,
+                    User.image,
+                    User.birth_day,
+                    User.cell_phone,
+                    User.rh,
+                    User.school_name,
+                    User.grade,
+                    User.hobbies_interests,
+                    User.allergies,
+                    User.city_id,
+                   
+                ).join(Rol).join(Church).join(SubDetachment).join(City).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).filter(User.id==id).first()
+            return {"data":res }
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
+            )
+    async def create_scout(user,payload, db):
+        try:
+            new_user = User(**user)
+            new_user.email=fake.email()
+            new_user.sub_detachment_id=payload["sub_detachment_id"]
+            new_user.church_id=payload["church_id"]
+            new_user.rol_id=13
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
@@ -85,5 +118,21 @@ class ScoutRepository:
         except Exception as e:
 
             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
+            )
+    async def edit_scout(id:int,payload ,data,db):
+        try:
+            result=db.query(User).filter(User.id==id)
+            if result.first()==None:
+                raise HTTPException(status_code=status.HTTP_400_BAD,detail="The id is not a valid")
+            # new_user.sub_detachment_id=payload["sub_detachment_id"]
+            # new_user.church_id=payload["church_id"]
+            # new_user.rol_id=13
+            result.update(data)
+            db.commit()
+            return {"data":data,"detail":"the data was successfully updated"}
+
+        except Exception as e:
+           raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
             )

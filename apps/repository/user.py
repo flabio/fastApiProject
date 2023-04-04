@@ -29,7 +29,7 @@ class UserRepository:
                 limite =9
         
             page_total= config_page.page_total_cell(count_query,limite)
-            res=db.query(Church).order_by(Church.id.desc())
+           
             res = db.query(
                     User.id,
                     User.first_name,
