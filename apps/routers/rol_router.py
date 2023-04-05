@@ -11,8 +11,6 @@ rol_router=APIRouter(
     prefix="/api/v1/rols",
     tags=["rols"]
 )
-rols=[]
-
 
 #dependencies=[Depends(check_admin)],
 @rol_router.get("/", status_code=status.HTTP_200_OK)
