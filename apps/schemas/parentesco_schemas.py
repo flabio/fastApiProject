@@ -1,7 +1,8 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class ParentescoSchema(BaseModel):
-    id:int
+    id:Optional[int]
     first_name:str
     last_name:str
     identification:str
@@ -10,5 +11,10 @@ class ParentescoSchema(BaseModel):
     cell_phone:str
     civil_status:str
     is_active:bool=True    
-    user_id:int
+  
     
+class ScoutKindredSchema(BaseModel):
+    id:Optional[int]
+    parentesco_id:int
+    scout_id:int
+    is_active:bool=True 

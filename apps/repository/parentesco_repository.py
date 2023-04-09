@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from apps.model.parentesco_model import Parentesco
+from apps.model.parentesco_model import Parentesco,Scoutkindred
 from apps.utils import config_page
 
 
@@ -66,7 +66,6 @@ class ParentescoRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
             )
 
-
     async def update_parentesco(id: int, data, db):
         try:
             result = db.query(Parentesco).filter(Parentesco.id == id)
@@ -76,8 +75,7 @@ class ParentescoRepository:
             db.commit()
             return {"data":data,"detail":"the data was successfully updated"}
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="The id of the kindred is not a valid")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The id of the kindred is not a valid")
 
     async def delete_parentesco_by_id(id: int, db):
         try:
@@ -89,8 +87,31 @@ class ParentescoRepository:
             db.commit()
             return {"detail": "the record was successfully deleted."}
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="The id of the kindred is not a valid")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="The id of the kindred is not a valid")
+    
+    # add scout a kindred
+    async def add_scout_kindred(data, db):
+        try:
+            new_data = Scoutkindred(**data.dict())
+            db.add(new_data)
+            db.commit()
+            db.refresh(new_data)
+            return {"data": new_data, "detail": "the kindred was add successfully"}
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
+            ) 
+    async def delete_scout_kindred_by_id(id: int, db):
+        try:
+            result = db.query(Scoutkindred).filter(Scoutkindred.id == id)
+            if result.first() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="The id of the kindred is not a valid")
+            result.delete(synchronize_session=False)
+            db.commit()
+            return {"detail": "the record was successfully deleted."}
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="The id of the kindred is not a valid")
     # private
 
     async def exist_id(id: int, db):
@@ -106,3 +127,10 @@ class ParentescoRepository:
         if result:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="identification already exist")
+    async def exist_kindred(scout_id: int,kindred_id:int, db):
+        result = db.query(Scoutkindred).filter(Scoutkindred.scout_id == scout_id).filter(Scoutkindred.parentesco_id == kindred_id).first()
+     
+        if result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="the kindred you selected already has it associated")
+    

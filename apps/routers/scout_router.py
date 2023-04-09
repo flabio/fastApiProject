@@ -96,7 +96,7 @@ def validate_fields(data):
     if len(data["rh"])==0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="The direction is required")
     
-    if data["city_id"]<=0:
+    if int(data["city_id"])<=0 :
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,detail="The city id is required")
     
