@@ -28,7 +28,9 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends(),db:Session=Dep
             'full_name':result.first_name+" "+result.last_name,
             'image':result.image,
             'role':result.rol_name,
-            
+            'church_name': result.church_name,
+            'detachment_name':result.detachment_name,
+            'sub_detachment_name':result.sub_detachment_name
         }
         return {'user':data,'access_token':token,'token_type':'Bearer'}
     

@@ -12,6 +12,7 @@ from apps.routers.sub_detachment_router import sub_detachment_router
 from apps.routers.ministerial_academy_router import ministerial_academy_router
 from apps.routers.scout_router import scout_router
 from apps.routers.parentesco_router import parentesco_router
+from apps.routers.attendace_router import attendace_router
 from apps.routers.dashboard_router import dashboard_router
 import uvicorn
 from apps.config.db import Base,engine
@@ -46,6 +47,7 @@ app.include_router(ministerial_academy_router)
 app.include_router(study_conducted_router)
 app.include_router(scout_router)
 app.include_router(parentesco_router)
+app.include_router(attendace_router)
 app.include_router(dashboard_router)
 if __name__ == "__main__":
     uvicorn.run("main:app",reload=True)

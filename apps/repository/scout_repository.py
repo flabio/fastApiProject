@@ -6,15 +6,19 @@ from apps.model.church_model import Church
 from apps.model.city_model import City
 from apps.model.sub_detachment_model import SubDetachment
 from apps.utils import config_page
-from sqlalchemy import func
+from sqlalchemy import func,extract,or_
 from faker import Faker
 fake = Faker()
 class ScoutRepository:
 
-    async def all_scouts(sub_detachment_id:int,name:str,page:int,limite:int,db):
+    async def all_scouts(payload:int,name:str,page:int,limite:int,db):
         try:
+            payload.get("sub_detachment_id")
             search = "%{}%".format(name)
-            count_query=db.query(User).join(Rol).join(Church).join(SubDetachment).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).count()
+            count_query=db.query(User).join(Rol).join(Church).join(SubDetachment).\
+                filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
+                filter(User.church_id == payload.get("church_id")).\
+                filter(Rol.id==13).count()
             page_offset= config_page.page_offset(page,limite)
         
             if limite==0:
@@ -22,7 +26,6 @@ class ScoutRepository:
 
             page_total= config_page.page_total_cell(count_query,limite)
             res = db.query(
-               
                     User.id,
                     User.first_name,
                     User.last_name,
@@ -31,21 +34,26 @@ class ScoutRepository:
                     User.image,
                     User.birth_day,
                     User.cell_phone,
+                    extract('year', func.age(User.birth_day)).label("age"),
                     Rol.name.label("rol_name"),
                     Church.name.label("church_name"),
                     SubDetachment.name.label("sub_detachment_name"),
                    SubDetachment.image.label("sub_detachment_image"),
-                ).join(Rol).join(Church).join(SubDetachment).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).order_by(User.ceated_at.desc())
+                ).join(Rol).join(Church).join(SubDetachment).\
+                    filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
+                    filter(User.church_id == payload.get("church_id")).\
+                    filter(Rol.id==13).order_by(User.ceated_at.desc())
             if name==None:
                 res= res.offset(page_offset).limit(limite).all()
-            else:    
-                res= res.filter(User.first_name.ilike(search) ).offset(page_offset).limit(limite).all()
+            else: 
+                res= res.filter(or_( User.first_name.ilike(search) , User.last_name.ilike(search))).\
+                    offset(page_offset).limit(limite).all()
             return {"data":res,"page_total":page_total }
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
-    async def scout_find_by(id:int,sub_detachment_id:int,db):
+    async def scout_find_by(id:int,payload,db):
         try:
             res = db.query(
                     User.id,
@@ -65,13 +73,20 @@ class ScoutRepository:
                     User.hobbies_interests,
                     User.allergies,
                     User.eps_name,
+                     extract('year', func.age(User.birth_day)).label("age"),
                     City.name.label("city_name"),
                     User.city_id,
                     Rol.name.label("rol_name"),
                     Church.name.label("church_name"),
                     SubDetachment.name.label("sub_detachment_name"),
                    SubDetachment.image.label("sub_detachment_image"),
-                ).join(Rol).join(Church).join(SubDetachment).join(City).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).filter(User.id==id).first()
+                ).join(Rol).\
+                  join(Church).\
+                  join(SubDetachment).\
+                  join(City).\
+                  filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
+                  filter(User.church_id == payload.get("church_id")).\
+                  filter(Rol.id==13).filter(User.id==id).first()
             
             query_kindred=db.query(
                 Scoutkindred.id,
@@ -89,7 +104,7 @@ class ScoutRepository:
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
     
-    async def scout_find_by_id(id:int,sub_detachment_id:int,db):
+    async def scout_find_by_id(id:int,payload,db):
         try:
             res = db.query(
                     User.id,
@@ -110,7 +125,13 @@ class ScoutRepository:
                     User.allergies,
                     User.city_id,
                     User.eps_name,
-                ).join(Rol).join(Church).join(SubDetachment).join(City).filter(User.sub_detachment_id == sub_detachment_id).filter(Rol.id==13).filter(User.id==id).first()
+                ).join(Rol).join(Church).\
+                    join(SubDetachment).\
+                    join(City).\
+                    filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
+                    filter(User.church_id == payload.get("church_id")).\
+                    filter(Rol.id==13).\
+                    filter(User.id==id).first()
             return {"data":res }
         except Exception as e:
             raise HTTPException(

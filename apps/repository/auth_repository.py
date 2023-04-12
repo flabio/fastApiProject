@@ -2,7 +2,9 @@ from fastapi import HTTPException,status
 from apps.model.user_model import User
 from apps.model.rol_model import Rol
 from apps.model.church_model import Church
-
+from apps.model.sub_detachment_model import SubDetachment
+from apps.model.detachment_model import Detachment
+from sqlalchemy.orm import joinedload
 class AuthRepository:
     
 
@@ -22,8 +24,12 @@ class AuthRepository:
                     User.church_id,
                     User.sub_detachment_id,
                     User.password,
-                    Church.name.label("church_name"),
-                ).join(Rol).join(Church).filter(User.username==username).where(User.rol_id==Rol.id).first()
+                    Church.name.label("church_name"),  
+                    SubDetachment.name.label("sub_detachment_name"),
+                    Detachment.name.label("detachment_name"),
+                   
+                ).join(Rol).join(Church,Detachment).join(SubDetachment).filter(User.username==username).first()
+            print(user)
             return user
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e.args[0]}")

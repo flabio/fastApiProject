@@ -1,11 +1,12 @@
-from fastapi import APIRouter,Depends, File, UploadFile,status,HTTPException
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter,Depends,status,HTTPException
+
 from PIL import Image
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.scout_repository import ScoutRepository
+from apps.repository.user import UserRepository
 from apps.auth import check_comandant,oauth2_scheme,verify_token
-from apps.schemas.user_schemas import ScoutSchema
+
 from starlette.requests import Request
 from apps.utils.profile_upload import update_upload_image_profile
 import json
@@ -19,20 +20,20 @@ scout_router=APIRouter(
 
 
 @scout_router.get("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def alld_scouts(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 9,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+async def alld_scouts(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
-    result =await ScoutRepository.all_scouts(payload.get("sub_detachment_id"),q,page,limite,db)
+    result =await ScoutRepository.all_scouts(payload,q,page,limite,db)
     return result
 
 @scout_router.get("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def scout_find_by(id: int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
-    return await ScoutRepository.scout_find_by(id,payload.get("sub_detachment_id"),db)
+    return await ScoutRepository.scout_find_by(id,payload,db)
     
 @scout_router.get("/scout_find_by_id/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def scout_find_by_id(id: int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
-    return await ScoutRepository.scout_find_by_id(id,payload.get("sub_detachment_id"),db)
+    return await ScoutRepository.scout_find_by_id(id,payload,db)
 
 
 @scout_router.post("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
@@ -41,6 +42,8 @@ async def create_scout(request:Request,db:Session=Depends(get_db),token:str=Depe
     data = form.get("data").replace("'", "\"")
     validata_data = json.loads(data)
     validate_fields(validata_data)
+
+    UserRepository.exist_identification(validata_data["identification"],db)
     if form!=None:
         if form['image']!="":
             filename= await update_upload_image_profile(form['image'])
