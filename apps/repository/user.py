@@ -115,7 +115,6 @@ class UserRepository:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
-
             return {"data": new_user, "detail": "the data was saved successfully"}
         except Exception as e:
 
@@ -151,6 +150,7 @@ class UserRepository:
             user = db.query(User).filter(User.id == id)
             if not user.first():
                 return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The id of the user is not a valid")
+            user.first().username=user_update.identification
             user.update(user_update.dict(exclude_unset=True))
             db.commit()
             return {"data":user_update,"detail":"the data was successfully updated"}

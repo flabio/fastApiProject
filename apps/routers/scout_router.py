@@ -20,20 +20,33 @@ scout_router=APIRouter(
 
 
 @scout_router.get("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def alld_scouts(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+async def alld_scouts(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,age:Optional[int]=0,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
-    result =await ScoutRepository.all_scouts(payload,q,page,limite,db)
+    result =await ScoutRepository.all_scouts(payload,q,page,limite,age,db)
     return result
 
 @scout_router.get("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def scout_find_by(id: int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
     return await ScoutRepository.scout_find_by(id,payload,db)
-    
+
+ 
 @scout_router.get("/scout_find_by_id/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def scout_find_by_id(id: int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
     return await ScoutRepository.scout_find_by_id(id,payload,db)
+
+@scout_router.get("/scout_change_to_sub_detachment/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def scout_change_to_sub_detachment(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await ScoutRepository.scout_change_to_sub_detachment(payload,db)
+
+
+@scout_router.get("/all_scouts_age/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def all_scouts_age(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await ScoutRepository.all_scouts_age(payload,db)
+
 
 
 @scout_router.post("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
@@ -66,7 +79,10 @@ async def edit_scout(id:int,request:Request,db:Session=Depends(get_db),token:str
     return await ScoutRepository.edit_scout(id,payload,validata_data,db)
     
 
-
+@scout_router.get("/change_sub_detachment_scout/{id}",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def change_sub_detachment_scout(id:int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await ScoutRepository.change_sub_detachment_scout(id,payload,db)
 
 #method private
 def validate_fields(data):

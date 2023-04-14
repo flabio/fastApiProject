@@ -1,0 +1,9 @@
+def change_to_sub_detachment_by_age(sub_detachment_id):
+    if sub_detachment_id==1:
+        return 8
+    if sub_detachment_id==2:
+        return 11
+    if sub_detachment_id==3:
+        return 14
+    if sub_detachment_id==9:
+        return 18

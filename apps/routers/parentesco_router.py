@@ -3,7 +3,7 @@ from  apps.schemas.parentesco_schemas   import ParentescoSchema,ScoutKindredSche
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.parentesco_repository import ParentescoRepository
-from apps.auth import check_comandant
+from apps.auth import check_comandant,oauth2_scheme,verify_token
 from typing import Optional
 parentesco_router=APIRouter(
     prefix="/api/v1/kindred",
@@ -12,21 +12,24 @@ parentesco_router=APIRouter(
 
 
 @parentesco_router.get("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def read_parentesco(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,db:Session=Depends(get_db)):
-    return await ParentescoRepository.all_parentesco(q,page,limite,db)
+async def read_parentesco(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await ParentescoRepository.all_parentesco(payload,q,page,limite,db)
 
 @parentesco_router.get("/find_parentesco_by_id/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def find_parentesco_by_id(id:int,db:Session=Depends(get_db)):
-    await ParentescoRepository.exist_id(id,db)
-    return await ParentescoRepository.find_parentesco_by_id(id,db)
+async def find_parentesco_by_id(id:int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    await ParentescoRepository.exist_id(id,payload,db)
+    return await ParentescoRepository.find_parentesco_by_id(id,payload,db)
 
 
 @parentesco_router.post("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
-async def create_parentesco( data:ParentescoSchema,db:Session=Depends(get_db)):
+async def create_parentesco( data:ParentescoSchema,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
     new_data=data.dict()
     _validates_fields(new_data)
-    ParentescoRepository.exist_identification(new_data["identification"],db)
-    return await ParentescoRepository.create_parentesco(data,db)
+    ParentescoRepository.exist_identification(new_data["identification"],payload,db)
+    return await ParentescoRepository.create_parentesco(data,payload,db)
     
 @parentesco_router.patch("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
 async def update_parentesco(id:int, data:ParentescoSchema,db:Session=Depends(get_db)):

@@ -12,6 +12,7 @@ class Church(Base):
     address=Column(String)
     telephone=Column(String)
     user=relationship("User",back_populates="church")
+    parentesco=relationship("Parentesco",back_populates="church")
     detachment=relationship("Detachment",back_populates="church")
     is_active=Column(Boolean,default=True)
     created_at=Column(DateTime,default=datetime.now,onupdate=datetime.now)

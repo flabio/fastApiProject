@@ -63,7 +63,10 @@ class UserUpdateSchema(BaseModel):
     rol_id:int=None
     is_active:bool=None
     
-
+class UserUpdateChangeSubDetachmentSchema(BaseModel):
+    sub_detachment_id:Optional[int]
+    class Config():
+        orm_mode=True
 
 class ScoutSchema(BaseModel):
     image:Optional[str]

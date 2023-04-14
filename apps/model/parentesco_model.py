@@ -14,6 +14,8 @@ class Parentesco(Base):
     direction=Column(String(50))
     cell_phone=Column(String)
     civil_status=Column(String)
+    church_id=Column(Integer,ForeignKey("church.id",ondelete="CASCADE"),nullable=False)
+    church=relationship("Church",back_populates="parentesco")
     is_active=Column(Boolean,default=True)    
     ceated_at=Column(DateTime,default=datetime.now,onupdate=datetime.now)
     

@@ -5,10 +5,10 @@ from apps.utils import config_page
 
 class ParentescoRepository:
 
-    async def all_parentesco(name:str,page:int,limite:int,db):
+    async def all_parentesco(payload,name:str,page:int,limite:int,db):
         try:
             search = "%{}%".format(name)
-            count_query=db.query(Parentesco).count()
+            count_query=db.query(Parentesco).filter(Parentesco.church_id==payload.get("church_id")).count()
             page_offset= config_page.page_offset(page,limite)
         
             if limite==0:
@@ -25,7 +25,7 @@ class ParentescoRepository:
                     Parentesco.direction,
                     Parentesco.cell_phone,
                     Parentesco.is_active,
-                ).order_by(Parentesco.id.desc())
+                ).filter(Parentesco.church_id==payload.get("church_id")).order_by(Parentesco.id.desc())
             if name==None:
                 res= res.offset(page_offset).limit(limite).all()
             else:    
@@ -36,7 +36,7 @@ class ParentescoRepository:
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
    
-    async def find_parentesco_by_id(id: int, db):
+    async def find_parentesco_by_id(id: int,payload, db):
         try:
             result = db.query(
                Parentesco.id,
@@ -48,15 +48,16 @@ class ParentescoRepository:
                     Parentesco.direction,
                     Parentesco.cell_phone,
                     Parentesco.is_active,
-                ).filter(Parentesco.id == id).first()
+                ).filter(Parentesco.id == id).filter(Parentesco.church_id==payload.get("church_id")).first()
             return {"parentesco":result}
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e.args[0]}")
 
-    async def create_parentesco(data, db):
+    async def create_parentesco(data,payload, db):
         try:
             new_data = Parentesco(**data.dict())
+            new_data.church_id=payload.get("church_id")
             db.add(new_data)
             db.commit()
             db.refresh(new_data)
@@ -114,16 +115,16 @@ class ParentescoRepository:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="The id of the kindred is not a valid")
     # private
 
-    async def exist_id(id: int, db):
-        result = db.query(Parentesco).filter(Parentesco.id == id).first()
+    async def exist_id(id: int,payload, db):
+        result = db.query(Parentesco).filter(Parentesco.id == id).filter(Parentesco.church_id==payload.get("church_id")).first()
    
         if result == None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="The id of the parentesco is not a valid")
     
-    def exist_identification(identification:str, db):
+    def exist_identification(identification:str,payload, db):
         result = db.query(Parentesco).filter(
-            Parentesco.identification == identification).first()
+            Parentesco.identification == identification).filter(Parentesco.church_id==payload.get("church_id")).first()
         if result:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="identification already exist")
