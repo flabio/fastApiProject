@@ -31,8 +31,6 @@ def create_access_token(user):
         print(str(ex))
         raise ex
 
-
-    
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -68,6 +66,7 @@ def check_admin(payload: dict = Depends(check_active)):
             detail="Only admins can access this route",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 def check_comandant(payload:dict=Depends(check_active)):
     role = payload.get("rol_name")
     if role == "comandante" or role == "admin":

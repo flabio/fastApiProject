@@ -3,7 +3,7 @@ from  apps.schemas.church_schemas import ChurchSchema
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.church_repository import ChurchRepository
-from apps.auth import check_admin
+from apps.auth import check_admin,check_comandant
 from typing import Optional
 church_router=APIRouter(
     prefix="/api/v1/churchs",
@@ -12,16 +12,16 @@ church_router=APIRouter(
 
 
 #@church_router.get("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
-@church_router.get("/",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
+@church_router.get("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def get_churchs(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 5,db:Session=Depends(get_db)):
    
     return await ChurchRepository.all_churchs(q,page,limite,db)
 
-@church_router.get("/{id}",status_code=status.HTTP_200_OK)
+@church_router.get("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def get_church(id:int,db:Session=Depends(get_db)):
     return await ChurchRepository.find_church_by_id(id,db)
  
-@church_router.post("/",status_code=status.HTTP_201_CREATED)
+@church_router.post("/",dependencies=[Depends(check_admin)],status_code=status.HTTP_201_CREATED)
 async def create_church(church:ChurchSchema,db:Session=Depends(get_db)):
     new_church =church.dict()
     validate_church_fields(new_church)
@@ -32,7 +32,7 @@ async def create_church(church:ChurchSchema,db:Session=Depends(get_db)):
     return result
 
 
-@church_router.patch("/{id}",status_code=status.HTTP_201_CREATED)
+@church_router.patch("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_201_CREATED)
 async def update_church(id:int,church:ChurchSchema,db:Session=Depends(get_db)):
     new_church=church.dict()
     validate_church_fields(new_church)
@@ -44,7 +44,7 @@ async def update_church(id:int,church:ChurchSchema,db:Session=Depends(get_db)):
     result=await ChurchRepository.update_church(id,church,db)
     return result
 
-@church_router.delete("/{id}",status_code=status.HTTP_200_OK)
+@church_router.delete("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def delete_church(id:int,db:Session=Depends(get_db)):
     return await  ChurchRepository.delete_church(id,db)
 

@@ -10,6 +10,14 @@ dashboard_router=APIRouter(
 )
 
 @dashboard_router.get("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def counts_scouts(church_id:Optional[int],db:Session=Depends(get_db)):
-    return await DashboardRepository.counts_scouts(church_id,db)
-    
+async def counts_scouts(church_id:Optional[int],year:Optional[int],db:Session=Depends(get_db)):
+    return await DashboardRepository.counts_scouts(church_id,year,db)
+
+@dashboard_router.get("/chart_by_year_scouts",status_code=status.HTTP_200_OK)
+async def chart_by_year_scouts(church_id:Optional[int],year:Optional[int],db:Session=Depends(get_db)):
+    return await DashboardRepository.chart_by_year_scouts(church_id,year,db)
+
+@dashboard_router.get("/chart_church__scouts",status_code=status.HTTP_200_OK)
+async def chart_church__scouts(church_id:Optional[int],year:Optional[int],db:Session=Depends(get_db)):
+    return await DashboardRepository.chart_church__scouts(church_id,year,db)
+

@@ -19,7 +19,11 @@ async def alld_scouts(id:int,page: Optional[int] = 1,db:Session=Depends(get_db),
     payload=verify_token(token)
     return await AttendaceRepository.all_attendace(id,payload,page,db)
   
-
+@attendace_router.get("/all_scouts_by_call/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def all_scouts_by_call(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await AttendaceRepository.all_scouts_by_call(payload,db)
+  
 @attendace_router.post("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def create_scout(data:AttendaceSchemas,db:Session=Depends(get_db)):
     validata_data=data.dict()

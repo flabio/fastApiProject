@@ -68,6 +68,27 @@ class UserUpdateChangeSubDetachmentSchema(BaseModel):
     class Config():
         orm_mode=True
 
+class ScoutTestSchema(BaseModel):
+    first_name:str
+    last_name:str
+    identification:str
+    type_identification:str
+    birth_day:str
+    rh:str
+    direction:str
+    cell_phone:str
+    grade:int  
+    school_name:str
+    eps_name:str
+    department_name:str
+    location_name:str
+    city_id:int
+    church_id:int
+    sub_detachment_id:int
+    rol_id:int
+    email:str
+  
+        
 class ScoutSchema(BaseModel):
     image:Optional[str]
     first_name:str

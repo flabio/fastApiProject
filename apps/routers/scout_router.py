@@ -6,7 +6,8 @@ from sqlalchemy.orm  import Session
 from apps.repository.scout_repository import ScoutRepository
 from apps.repository.user import UserRepository
 from apps.auth import check_comandant,oauth2_scheme,verify_token
-
+from apps.model.user_model  import User
+from apps.schemas.user_schemas import UserSchema,ScoutTestSchema
 from starlette.requests import Request
 from apps.utils.profile_upload import update_upload_image_profile
 import json
@@ -25,9 +26,12 @@ async def alld_scouts(q: Optional[str] = None,page: Optional[int] = 1,limite: Op
     result =await ScoutRepository.all_scouts(payload,q,page,limite,age,db)
     return result
 
+
+
 @scout_router.get("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def scout_find_by(id: int,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
     payload=verify_token(token)
+    
     return await ScoutRepository.scout_find_by(id,payload,db)
 
  
@@ -49,21 +53,27 @@ async def all_scouts_age(db:Session=Depends(get_db),token:str=Depends(oauth2_sch
 
 
 
-@scout_router.post("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+@scout_router.post("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
 async def create_scout(request:Request,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+  
     form = await request.form()
     data = form.get("data").replace("'", "\"")
     validata_data = json.loads(data)
     validate_fields(validata_data)
-
     UserRepository.exist_identification(validata_data["identification"],db)
     if form!=None:
         if form['image']!="":
             filename= await update_upload_image_profile(form['image'])
             validata_data['image']=filename
     payload=verify_token(token)
-    return await ScoutRepository.create_scout(validata_data,payload,db)
+    return await  ScoutRepository.create_scout(validata_data,payload,db)
     
+
+@scout_router.post("/test",status_code=status.HTTP_201_CREATED)
+def create_test_scout(user:ScoutTestSchema,db:Session=Depends(get_db)):
+  
+    return  ScoutRepository.create_test_scout(user,db)
+
    
 @scout_router.patch("/{id}",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def edit_scout(id:int,request:Request,db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):

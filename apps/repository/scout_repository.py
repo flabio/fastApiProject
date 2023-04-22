@@ -6,8 +6,10 @@ from apps.model.church_model import Church
 from apps.model.city_model import City
 from apps.model.sub_detachment_model import SubDetachment
 from apps.utils import config_page, age_change_to_sub_detachment
-from sqlalchemy import func, extract, or_
+from sqlalchemy import func, extract, or_,text,cast, Date
+from datetime import datetime
 from faker import Faker
+
 fake = Faker()
 
 
@@ -36,15 +38,24 @@ class ScoutRepository:
                 User.image,
                 User.birth_day,
                 User.cell_phone,
+                User.sub_detachment_id,
+                User.ceated_at,
+                cast(User.ceated_at, Date).label("date_created"),
                 extract('year', func.age(User.birth_day)).label("age"),
+          
+                extract('day', func.age(cast(User.ceated_at, Date))).label("day_actual"),
                 Rol.name.label("rol_name"),
                 Church.name.label("church_name"),
                 SubDetachment.name.label("sub_detachment_name"),
                 SubDetachment.image.label("sub_detachment_image"),
+                
             ).join(Rol).join(Church).join(SubDetachment).\
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
-                filter(Rol.id == 13).order_by(User.ceated_at.desc())
+                filter(Rol.id == 13).filter(extract('day', func.age(cast(User.ceated_at, Date)))>=15).\
+                filter(extract('month', func.age(cast(User.ceated_at, Date)))==0).\
+                order_by(User.ceated_at.asc())
+                        
             if name == None:
                 res = res.offset(page_offset).limit(limite).all()
 
@@ -55,16 +66,26 @@ class ScoutRepository:
                         offset(page_offset).limit(limite).all()
                 else:
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
+                        filter(extract('day', func.age(cast(User.ceated_at, Date)))>=15).\
                         offset(page_offset).limit(limite).all()
             return {"data": res, "page_total": page_total}
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
+    
     async def all_scouts_age(payload,  db):
         try:
             payload.get("sub_detachment_id")
-            
+            data=[]
+            if payload.get("sub_detachment_id")==1:
+                data=[8,9,10]
+            if payload.get("sub_detachment_id")==2:
+                data=[11,12,13]
+            if payload.get("sub_detachment_id")==3:
+                data=[14,15,16,17]
+            if payload.get("sub_detachment_id")==9:
+                data=[18,19,20,21]
             count_query = db.query(User).join(Rol).join(Church).join(SubDetachment).\
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
@@ -79,6 +100,7 @@ class ScoutRepository:
                 User.birth_day,
                 User.cell_phone,
                 extract('year', func.age(User.birth_day)).label("age"),
+                extract('day', func.age(User.birth_day)).label("dias"),
                 Rol.name.label("rol_name"),
                 Church.name.label("church_name"),
                 SubDetachment.name.label("sub_detachment_name"),
@@ -87,7 +109,7 @@ class ScoutRepository:
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
                 filter(Rol.id == 13).\
-                filter(extract('year', func.age(User.birth_day)).in_([8,11,14,18])).\
+                filter(extract('year', func.age(User.birth_day)).in_(data)).\
                 order_by(User.ceated_at.desc()).\
                 all()
             return {"data": res, "total_scout": count_query}
@@ -115,6 +137,7 @@ class ScoutRepository:
                 User.hobbies_interests,
                 User.allergies,
                 User.eps_name,
+               
                 extract('year', func.age(User.birth_day)).label("age"),
                 City.name.label("city_name"),
                 User.city_id,
@@ -148,13 +171,22 @@ class ScoutRepository:
 
     async def scout_change_to_sub_detachment(payload, db):
         try:
+            data=[]
+            if payload.get("sub_detachment_id")==1:
+                data=[8,9,10]
+            if payload.get("sub_detachment_id")==2:
+                data=[11,12,13]
+            if payload.get("sub_detachment_id")==3:
+                data=[14,15,16,17]
+            if payload.get("sub_detachment_id")==9:
+                data=[18,19,20,21]
             count_query = db.query(User).join(Rol).\
                 join(Church).\
                 join(SubDetachment).\
                 join(City).\
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
-              filter(extract('year', func.age(User.birth_day)).in_([8,11,14,18])).\
+              filter(extract('year', func.age(User.birth_day)).in_(data)).\
                 filter(Rol.id == 13).count()
             result = db.query(
                 User.id,
@@ -173,7 +205,7 @@ class ScoutRepository:
                 join(City).\
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
-                filter(extract('year', func.age(User.birth_day)).in_([8,11,14,18])).\
+                filter(extract('year', func.age(User.birth_day)).in_(data)).\
                 filter(Rol.id == 13).limit(4).all()
 
             return {"data": result, 'total_scout': count_query}
@@ -217,7 +249,7 @@ class ScoutRepository:
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
             )
 
-    async def create_scout(user, payload, db):
+    async def create_scout(user,payload, db):
         try:
             new_user = User(**user)
             new_user.email = fake.email()
@@ -227,14 +259,43 @@ class ScoutRepository:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
-
-            return {"data": new_user, "detail": "the data was saved successfully"}
+            return {"data": user, "detail": "the data was saved successfully"}
         except Exception as e:
-
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
             )
 
+    def create_test_scout(user, db):
+        try:
+            user = user.dict()
+            new_user = User(
+                first_name=user["first_name"],
+                last_name=user["last_name"],
+                identification=user["identification"],
+                type_identification=user["type_identification"],
+                birth_day=user["birth_day"],
+                rh=user["rh"],
+                direction=user["direction"],
+                cell_phone=user["cell_phone"],
+                grade=user["grade"],
+                school_name=user["school_name"],
+                eps_name=user["eps_name"],
+                department_name=user["department_name"],
+                location_name=user["location_name"],
+                city_id=user["city_id"],
+                church_id=user["church_id"],
+                sub_detachment_id=user["sub_detachment_id"],
+                rol_id=user["rol_id"],
+                email=user["email"]
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            return {"data": user, "detail": "the data was saved successfully"}
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
+            )
     async def edit_scout(id: int, payload, data, db):
         try:
             result = db.query(User).filter(User.church_id == payload.get("church_id")).\
@@ -282,3 +343,4 @@ class ScoutRepository:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error:The id is not a valid"
             )
+    

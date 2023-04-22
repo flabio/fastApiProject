@@ -1,6 +1,11 @@
 from fastapi import HTTPException, status
 from apps.model.user_model import User
 from apps.model.attendance_model import Attendace
+from apps.model.church_model import Church
+from apps.model.rol_model import Rol
+from apps.model.sub_detachment_model import SubDetachment
+from sqlalchemy import func, extract, or_,text,cast, Date
+from datetime import datetime
 from apps.utils import config_page
 
 class AttendaceRepository:
@@ -60,6 +65,44 @@ class AttendaceRepository:
             return {"data":True,"detail":"the record was successfully removed"}
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The id of the rol is not a valid")
+    
+    async def all_scouts_by_call(payload, db):
+        try:
+            if payload.get("sub_detachment_id") == 1:
+                age_begin = 0
+                age_end=7
+            if payload.get("sub_detachment_id") == 2:
+                age_begin = 8
+                age_end=10
+            if payload.get("sub_detachment_id") == 3:
+                age_begin = 11
+                age_end=13
+            if payload.get("sub_detachment_id") == 9:
+                age_begin = 14
+                age_end=17
+            res = db.query(
+                User.id,
+                User.first_name,
+                User.last_name,
+                User.identification,
+                User.type_identification,
+                User.cell_phone,
+                User.image,
+                extract('year', func.age(User.birth_day)).label("age"),
+                Church.name.label("church_name"),
+                SubDetachment.name.label("sub_detachment_name"),
+            ).join(Rol).join(Church).join(SubDetachment).join(Attendace).\
+                filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
+                filter(User.church_id == payload.get("church_id")).\
+                filter(Rol.id == 13).filter(extract('day', func.age(cast(Attendace.created_at, Date)))>=15).\
+                filter(extract('month', func.age(cast(Attendace.created_at, Date)))==0).\
+                filter(extract('year', func.age(User.birth_day)).between(age_begin,age_end)).\
+                order_by(User.ceated_at.desc()).all()
+            return {"data": res}
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
+            )
     #private
             
             

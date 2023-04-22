@@ -16,9 +16,7 @@ auth_router=APIRouter(
 @auth_router.post("/login",status_code=status.HTTP_200_OK)
 async def login( form_data: OAuth2PasswordRequestForm = Depends(),db:Session=Depends(get_db)):
     # new_user=user.dict()
-    
     result= await AuthRepository.auth_login(form_data.username,db)
-    
     if not result:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user not authenticated")
     if verify_password(form_data.password,result.password):
@@ -33,12 +31,12 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends(),db:Session=Dep
             'sub_detachment_name':result.sub_detachment_name
         }
         return {'user':data,'access_token':token,'token_type':'Bearer'}
+    else:
+        raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,detail="user or password incorrect")
     
-
 @auth_router.get("/logout/{token}",status_code=status.HTTP_200_OK)
 async def logout( token:str):
-    # new_user=user.dict()
-    
     verify_token(token)
     return {'user':None,'access_token':None,'token_type':''}
     
@@ -48,7 +46,6 @@ async def login_user(token: str, db: Session = Depends(get_db)):
     payload = verify_token(token)
     username = payload.get("sub")
     db_user =await AuthRepository.auth_login(username,db)
- 
     db.commit()
     return f"""
     <html>
