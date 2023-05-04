@@ -161,3 +161,7 @@ class AuthLonginSchema(BaseModel):
         
 class UserId(BaseModel):
     id:int
+
+class UserChangePasswordSchema(BaseModel):
+    password:str
+    comfirm_password:str

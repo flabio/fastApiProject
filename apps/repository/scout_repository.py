@@ -5,8 +5,8 @@ from apps.model.rol_model import Rol
 from apps.model.church_model import Church
 from apps.model.city_model import City
 from apps.model.sub_detachment_model import SubDetachment
-from apps.utils import config_page, age_change_to_sub_detachment
-from sqlalchemy import func, extract, or_,text,cast, Date
+from apps.utils import config_page
+from sqlalchemy import func, extract, or_,cast, Date
 from datetime import datetime
 from faker import Faker
 
@@ -40,10 +40,8 @@ class ScoutRepository:
                 User.cell_phone,
                 User.sub_detachment_id,
                 User.ceated_at,
-                cast(User.ceated_at, Date).label("date_created"),
                 extract('year', func.age(User.birth_day)).label("age"),
           
-                extract('day', func.age(cast(User.ceated_at, Date))).label("day_actual"),
                 Rol.name.label("rol_name"),
                 Church.name.label("church_name"),
                 SubDetachment.name.label("sub_detachment_name"),
@@ -52,22 +50,26 @@ class ScoutRepository:
             ).join(Rol).join(Church).join(SubDetachment).\
                 filter(User.sub_detachment_id == payload.get("sub_detachment_id")).\
                 filter(User.church_id == payload.get("church_id")).\
-                filter(Rol.id == 13).filter(extract('day', func.age(cast(User.ceated_at, Date)))>=15).\
-                filter(extract('month', func.age(cast(User.ceated_at, Date)))==0).\
+                filter(Rol.id == 13).\
                 order_by(User.ceated_at.asc())
+                
+                # filter(Rol.id == 13).filter(extract('day', func.age(cast(User.ceated_at, Date)))>=15).\
+                # filter(extract('month', func.age(cast(User.ceated_at, Date)))==0).\
                         
             if name == None:
                 res = res.offset(page_offset).limit(limite).all()
 
             else:
+                
                 if age > 0:
+                    print(age)
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
                         filter(extract('year', func.age(User.birth_day)) == age).\
                         offset(page_offset).limit(limite).all()
                 else:
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
-                        filter(extract('day', func.age(cast(User.ceated_at, Date)))>=15).\
                         offset(page_offset).limit(limite).all()
+                    print(res)
             return {"data": res, "page_total": page_total}
         except Exception as e:
             raise HTTPException(

@@ -11,7 +11,7 @@ class RolRepository:
             count_query=db.query(Rol).count()
             page_offset= config_page.page_offset(page,limite)
             if limite==0:
-                limite =5
+                limite =20
                 
             page_total= config_page.page_total_cell(count_query,limite)
             res=db.query(Rol).order_by(Rol.id.desc())

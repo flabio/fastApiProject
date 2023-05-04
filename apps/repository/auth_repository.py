@@ -4,7 +4,7 @@ from apps.model.rol_model import Rol
 from apps.model.church_model import Church
 from apps.model.sub_detachment_model import SubDetachment
 from apps.model.detachment_model import Detachment
-from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import func
 class AuthRepository:
     
 
@@ -26,10 +26,10 @@ class AuthRepository:
                     User.password,
                     Church.name.label("church_name"),  
                     SubDetachment.name.label("sub_detachment_name"),
-                    Detachment.name.label("detachment_name"),
-                   
+
+                     func.CONCAT(Detachment.name," #",Detachment.numbers).label("detachment_name"),
+
                 ).join(Rol).join(Church,Detachment).join(SubDetachment).filter(User.username==username).first()
-            print(user)
             return user
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e.args[0]}")

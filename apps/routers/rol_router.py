@@ -13,11 +13,11 @@ rol_router=APIRouter(
 )
 
 #dependencies=[Depends(check_admin)],
-@rol_router.get("/", status_code=status.HTTP_200_OK)
-async def read_rols(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 5,db:Session=Depends(get_db)):
+@rol_router.get("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
+async def read_rols(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 20,db:Session=Depends(get_db)):
     return await RolRepository.all_rols(q,page,limite,db)
  
-@rol_router.post("/", status_code=status.HTTP_201_CREATED)
+@rol_router.post("/",dependencies=[Depends(check_admin)], status_code=status.HTTP_201_CREATED)
 async def create_rol(rol:RolSchema,db:Session=Depends(get_db)):
     new_rol =rol.dict()
     if len(new_rol["name"])==0:
@@ -28,7 +28,7 @@ async def create_rol(rol:RolSchema,db:Session=Depends(get_db)):
     return result
 
 
-@rol_router.patch("/{id}", status_code=status.HTTP_201_CREATED)
+@rol_router.patch("/{id}",dependencies=[Depends(check_admin)], status_code=status.HTTP_201_CREATED)
 async def update_rol(id:int,rol:RolSchema,db:Session=Depends(get_db)):
     new_rol=rol.dict()
     if len(new_rol["name"])==0:
@@ -40,7 +40,7 @@ async def update_rol(id:int,rol:RolSchema,db:Session=Depends(get_db)):
     result=await  RolRepository.update_rol(id,rol,db)
     return result
 
-@rol_router.delete("/{id}",status_code=status.HTTP_200_OK)
+@rol_router.delete("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def delete_rol(id:int,db:Session=Depends(get_db)):
     return await  RolRepository.delete_rol_by_id(id,db)
     

@@ -1,11 +1,11 @@
 from fastapi import APIRouter,Depends, File, UploadFile,status,HTTPException
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
-from  apps.schemas.user_schemas import UserSchema,UserByIdSchema,UserUpdateSchema,UserListSchema
+from  apps.schemas.user_schemas import UserSchema,UserChangePasswordSchema
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.user import UserRepository
-from apps.auth import check_admin
+from apps.auth import check_admin,check_comandant,verify_token,oauth2_scheme
 from typing import List
 from apps.utils.profile_upload import update_upload_image_profile
 from typing import Optional
@@ -13,20 +13,24 @@ router=APIRouter(
     prefix="/api/v1/users",
     tags=["users"]
 )
-users=[]
 
 
 @router.get("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
-async def read_users(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 9,db:Session=Depends(get_db)):
-    result =await UserRepository.all_users(q,page,limite,db)
-    return result
+async def read_users(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 10,rol: Optional[int] = 0,db:Session=Depends(get_db)):
+    return await UserRepository.all_users(q,page,limite,rol,db)
    
-@router.get("/{id}", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
+@router.get("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def find_user_by_id(id:int,db:Session=Depends(get_db)):
     await UserRepository.exist_id(id,db)
     result=await UserRepository.find_user_by_id(id,db)
     return {"data":result}
 
+
+@router.get("/birth_day_commenders/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def birth_day_commenders(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await UserRepository.birth_day_commenders(payload,db)
+ 
 @router.put("/change_image_profile/{id}",status_code=status.HTTP_201_CREATED)
 async def change_imagen_profile_user( id:int,thumbnail: UploadFile = File(...),db:Session=Depends(get_db)):
     filename= await update_upload_image_profile(thumbnail)
@@ -50,12 +54,25 @@ async def create_user( user:UserSchema,db:Session=Depends(get_db)):
     result= await UserRepository.create_user(user,db)
     return result
 
-@router.patch("/{id}", dependencies=[Depends(check_admin)],status_code=status.HTTP_201_CREATED)
+@router.patch("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
 async def update_user(id:int, user_update:UserSchema,db:Session=Depends(get_db)):
     new_user=user_update.dict()
     _validates_fields(new_user)
     result=await UserRepository.update_user(id,user_update,db)
     return result
+
+
+@router.patch("/change_password/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
+async def update_password(id:int, user_password_update:UserChangePasswordSchema,db:Session=Depends(get_db)):
+    if len(user_password_update.password)<=7:
+        raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,detail="minimo es de 8 caracteres")
+    
+    if user_password_update.password!=user_password_update.comfirm_password:
+        raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,detail="La contraseña son diferente.")
+    return await UserRepository.update_password_user(id,user_password_update,db)
+    
 
 @router.delete("/{id}", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def delete_user_by_id(id:int,db:Session=Depends(get_db)):
