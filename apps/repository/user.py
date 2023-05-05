@@ -191,20 +191,44 @@ class UserRepository:
 
     async def birth_day_commenders(payload,db):
         try:
-            print(6+datetime.now().day)
-            
             result = db.query(
                     User.id,
                     User.first_name,
                     User.last_name,
                     User.image,
+                    SubDetachment.image.label("sub_detachment_image"),
+                    Rol.name.label("rol_name"),
                     User.birth_day,
                     extract('month', (User.birth_day)).label("mes"),
+                    extract('day', (User.birth_day)).label("dia"),
                     
-                    extract('day', (User.birth_day)-6).label("dia"),
                 ).join(Rol).join(Church).join(SubDetachment).\
                     filter(User.rol_id==12).\
                     filter(User.church_id==payload.get("church_id")).\
+                    filter( extract('month', (User.birth_day))==datetime.now().month).\
+                    all()
+            return result
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
+            )
+    async def birth_day_scouts(payload,db):
+        try:
+            result = db.query(
+                    User.id,
+                    User.first_name,
+                    User.last_name,
+                    User.image,
+                    SubDetachment.image.label("sub_detachment_image"),
+                    Rol.name.label("rol_name"),
+                    User.birth_day,
+                    extract('month', (User.birth_day)).label("mes"),
+                    extract('day', (User.birth_day)).label("dia"),
+                    
+                ).join(Rol).join(Church).join(SubDetachment).\
+                    filter(User.rol_id==13).\
+                    filter(User.church_id==payload.get("church_id")).\
+                    filter(User.sub_detachment_id==payload.get("sub_detachment_id")).\
                     filter( extract('month', (User.birth_day))==datetime.now().month).\
                     all()
             return result
