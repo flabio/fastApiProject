@@ -31,11 +31,17 @@ async def birth_day_commenders(db:Session=Depends(get_db),token:str=Depends(oaut
     payload=verify_token(token)
     return await UserRepository.birth_day_commenders(payload,db)
  
+@router.get("/birth_day_scouts/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def birth_day_scouts(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    payload=verify_token(token)
+    return await UserRepository.birth_day_scouts(payload,db)
+
+ 
 @router.put("/change_image_profile/{id}",status_code=status.HTTP_201_CREATED)
 async def change_imagen_profile_user( id:int,thumbnail: UploadFile = File(...),db:Session=Depends(get_db)):
     filename= await update_upload_image_profile(thumbnail)
-    result= await UserRepository.update_by_image_user(id,filename,db)
-    return result
+    return await UserRepository.update_by_image_user(id,filename,db)
+
 
 @router.post("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_201_CREATED)
 async def create_user( user:UserSchema,db:Session=Depends(get_db)):
@@ -51,15 +57,15 @@ async def create_user( user:UserSchema,db:Session=Depends(get_db)):
     UserRepository.exist_identification(new_user["identification"],db)
   
     UserRepository.exist_email(new_user["email"],db)
-    result= await UserRepository.create_user(user,db)
-    return result
+    return await UserRepository.create_user(user,db)
+ 
 
 @router.patch("/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
 async def update_user(id:int, user_update:UserSchema,db:Session=Depends(get_db)):
     new_user=user_update.dict()
     _validates_fields(new_user)
-    result=await UserRepository.update_user(id,user_update,db)
-    return result
+    return await UserRepository.update_user(id,user_update,db)
+   
 
 
 @router.patch("/change_password/{id}", dependencies=[Depends(check_comandant)],status_code=status.HTTP_201_CREATED)
