@@ -240,13 +240,10 @@ class UserRepository:
 
     async def exist_id(id: int, db):
         user = db.query(User).filter(User.id == id).first()
-   
         if user == None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="The id of the user is not a valid")
     
-
-
     def exist_identification(identification:str, db):
         user = db.query(User).filter(
             User.identification == identification).first()

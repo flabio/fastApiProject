@@ -41,7 +41,6 @@ class ScoutRepository:
                 User.sub_detachment_id,
                 User.ceated_at,
                 extract('year', func.age(User.birth_day)).label("age"),
-          
                 Rol.name.label("rol_name"),
                 Church.name.label("church_name"),
                 SubDetachment.name.label("sub_detachment_name"),
@@ -62,14 +61,14 @@ class ScoutRepository:
             else:
                 
                 if age > 0:
-                    print(age)
+                   
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
                         filter(extract('year', func.age(User.birth_day)) == age).\
                         offset(page_offset).limit(limite).all()
                 else:
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
                         offset(page_offset).limit(limite).all()
-                    print(res)
+                    
             return {"data": res, "page_total": page_total}
         except Exception as e:
             raise HTTPException(
