@@ -27,7 +27,7 @@ class AuthRepository:
                     Church.name.label("church_name"),  
                     SubDetachment.name.label("sub_detachment_name"),
 
-                     func.CONCAT(Detachment.name," #",Detachment.numbers).label("detachment_name"),
+                    func.CONCAT(Detachment.name," #",Detachment.numbers).label("detachment_name"),
 
                 ).join(Rol).join(Church,Detachment).join(SubDetachment).filter(User.username==username).first()
             return user

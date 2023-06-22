@@ -12,9 +12,14 @@ visit_router=APIRouter(
     tags=["visits"]
 )
 @visit_router.get("/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
-async def list_visits(page: Optional[int] = 1,limite: Optional[int] = 10,token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
+async def list_visits(q:Optional[str],page: Optional[int] = 1,limite: Optional[int] = 10,token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
     payload=verify_token(token)
-    return await VisitedRepository.all_visited(payload,page,limite,db)
+    return await VisitedRepository.all_visited(payload,q,page,limite,db)
+
+@visit_router.get("/not_scout_visit/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
+async def list_visits(q:Optional[str],page: Optional[int] = 1,limite: Optional[int] = 10,token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
+    payload=verify_token(token)
+    return await VisitedRepository.all_not_user_visited(payload,q,page,limite,db)
 
 @visit_router.get("/visit_month/", dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def list_visits_month(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):

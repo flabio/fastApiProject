@@ -37,6 +37,7 @@ class ScoutRepository:
                 User.type_identification,
                 User.image,
                 User.birth_day,
+                User.gender,
                 User.cell_phone,
                 User.sub_detachment_id,
                 User.ceated_at,
@@ -59,9 +60,7 @@ class ScoutRepository:
                 res = res.offset(page_offset).limit(limite).all()
 
             else:
-                
                 if age > 0:
-                   
                     res = res.filter(or_(User.first_name.ilike(search), User.last_name.ilike(search))).\
                         filter(extract('year', func.age(User.birth_day)) == age).\
                         offset(page_offset).limit(limite).all()
@@ -232,6 +231,7 @@ class ScoutRepository:
                 User.rh,
                 User.school_name,
                 User.grade,
+                User.gender,
                 User.hobbies_interests,
                 User.allergies,
                 User.city_id,
@@ -260,7 +260,7 @@ class ScoutRepository:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
-            return {"data": user, "detail": "the data was saved successfully"}
+            return {"data": user, "detail": "los datos se guardarón correctamente"}
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
@@ -292,7 +292,7 @@ class ScoutRepository:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
-            return {"data": user, "detail": "the data was saved successfully"}
+            return {"data": user, "detail": "los datos se guardarón correctamente"}
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args[0]}"
@@ -303,10 +303,10 @@ class ScoutRepository:
                 filter(User.id == id).filter(User.rol_id == 13)
             if result.first() == None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="The id is not a valid")
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="El id no es válido")
             result.update(data)
             db.commit()
-            return {"data": data, "detail": "the data was successfully updated"}
+            return {"data": data, "detail": "los datos se actualizarón correctamente"}
 
         except Exception as e:
             raise HTTPException(
@@ -320,14 +320,14 @@ class ScoutRepository:
                 filter(User.id == id).filter(User.rol_id == 13)
             if data.first() == None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="The id is not a valid")
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="El id no es válido")
 
             result = db.query(User).filter(User.id == id).\
                 filter(User.church_id == payload.get("church_id")).\
                 filter(User.id == id).filter(User.rol_id == 13).first()
             if result == None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="The id is not a valid")
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="El id no es válido")
             data = data.first()
             result.sub_detachment_id = 2
             if data.age == 8:
@@ -338,10 +338,10 @@ class ScoutRepository:
                 result.sub_detachment_id = 9
             db.commit()
             db.refresh(result)
-            return {"data": result, "detail": "the data was successfully updated"}
+            return {"data": result, "detail": "los datos se actualizarón correctamente"}
 
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Error:The id is not a valid"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Error:El id no es válido"
             )
     

@@ -50,7 +50,7 @@ class AttendaceRepository:
             db.add(new_data)
             db.commit()
             db.refresh(new_data)
-            return {"data": new_data, "detail": "the data was saved successfully"}
+            return {"data": new_data, "detail": "los datos se guardarón correctamente"}
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {e.args}"
@@ -59,7 +59,7 @@ class AttendaceRepository:
         try:
             data=db.query(Attendace).filter(Attendace.id==id)
             if data.first() is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The id is not a valid")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El id no es válido")
             data.delete(synchronize_session=False)
             db.commit()
             return {"data":True,"detail":"the record was successfully removed"}
