@@ -35,7 +35,7 @@ class RolRepository:
             db.add(new_rol)
             db.commit()
             db.refresh(new_rol)
-            return {"data":new_rol,"detail":"the data was saved successfully"}
+            return {"data":new_rol,'status':status.HTTP_201_CREATED,"detail":"the data was saved successfully"}
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"{e.args[0]}")
         
@@ -46,7 +46,7 @@ class RolRepository:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="The id of the rol is not a valid")
             rol.update(rol_update.dict(exclude_unset=True))
             db.commit()
-            return {"data":rol_update,"detail":"the data was successfully updated"}
+            return {"data":rol_update,'status':status.HTTP_201_CREATED,"detail":"the data was successfully updated"}
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"The id of the rol is not a valid")
     

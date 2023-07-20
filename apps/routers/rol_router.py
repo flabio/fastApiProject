@@ -16,6 +16,12 @@ rol_router=APIRouter(
 @rol_router.get("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def read_rols(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 20,db:Session=Depends(get_db)):
     return await RolRepository.all_rols(q,page,limite,db)
+
+@rol_router.get("/{id}", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
+async def find_rol_by_id(id:int,db:Session=Depends(get_db)):
+    result= await RolRepository.find_rol_by_id(id,db)
+    return  {"data":result} 
+
  
 @rol_router.post("/",dependencies=[Depends(check_admin)], status_code=status.HTTP_201_CREATED)
 async def create_rol(rol:RolSchema,db:Session=Depends(get_db)):
@@ -24,9 +30,8 @@ async def create_rol(rol:RolSchema,db:Session=Depends(get_db)):
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,detail="The name is required")
     await RolRepository.exist_name(new_rol["name"],db)
-    result=await  RolRepository.create_rol(rol,db)
-    return result
-
+    return await  RolRepository.create_rol(rol,db)
+    
 
 @rol_router.patch("/{id}",dependencies=[Depends(check_admin)], status_code=status.HTTP_201_CREATED)
 async def update_rol(id:int,rol:RolSchema,db:Session=Depends(get_db)):
@@ -37,9 +42,8 @@ async def update_rol(id:int,rol:RolSchema,db:Session=Depends(get_db)):
     data = await RolRepository.find_rol_by_id(id,db)
     if data.name!=new_rol["name"]:
         await RolRepository.exist_name(new_rol["name"],db)
-    result=await  RolRepository.update_rol(id,rol,db)
-    return result
-
+    return await  RolRepository.update_rol(id,rol,db)
+   
 @rol_router.delete("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 async def delete_rol(id:int,db:Session=Depends(get_db)):
     return await  RolRepository.delete_rol_by_id(id,db)
