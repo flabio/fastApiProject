@@ -1,11 +1,10 @@
-from fastapi import APIRouter,Depends,status,HTTPException
-
+from fastapi import APIRouter,Depends, File, UploadFile,status,HTTPException
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.attendace_repository import AttendaceRepository
 from apps.auth import check_comandant,oauth2_scheme,verify_token
 from apps.schemas.attendace_schemas import AttendaceSchemas
-
+from apps.utils.profile_upload import update_upload_image_profile
 from typing import Optional
 
 attendace_router=APIRouter(
@@ -36,7 +35,11 @@ async def create_scout(data:AttendaceSchemas,db:Session=Depends(get_db)):
 async def delete_scout(id:int,db:Session=Depends(get_db)):
     return await AttendaceRepository.delete_attendace_by_id(id,db)
    
-
+@attendace_router.put("/attendace_image_scout/",status_code=status.HTTP_201_CREATED)
+async def attendace_image_scout( db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    #filename= await update_upload_image_profile(thumbnail)
+    payload=verify_token(token)
+    return await AttendaceRepository.attendace_image_scout(payload,None,db)
 #method private
 def validate_fields(data):
     str_initial=data["initial_letter"].split("-")

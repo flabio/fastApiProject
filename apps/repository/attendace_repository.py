@@ -6,6 +6,9 @@ from apps.model.rol_model import Rol
 from apps.model.sub_detachment_model import SubDetachment
 from sqlalchemy import func, extract, or_,text,cast, Date
 from datetime import datetime
+import cv2
+import os
+import face_recognition
 from apps.utils import config_page
 
 class AttendaceRepository:
@@ -102,6 +105,85 @@ class AttendaceRepository:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {e}"
+            )
+    
+    async def attendace_image_scout(payload,file, db):
+        try:
+            imagesPath=os.getenv("FILEPATH_TEMP")+"navegante_img_tmp/"
+            count=0
+            if not os.path.exists("static/navegante_img_tmp"):
+                os.makedirs("static/navegante_img_tmp")
+                print("new directory: faces")
+            faceClassif=cv2.CascadeClassifier(cv2.data.haarcascades+"haarcascade_frontalface_alt.xml")
+            for imageName in os.listdir(imagesPath): 
+                image=cv2.imread(imagesPath+"/"+imageName)
+               
+                faces=faceClassif.detectMultiScale(image,1.1,5)
+                for(x,y,w,h) in faces:
+                    #cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
+                    face=image[y:y+h,x:x+w]
+                    face=cv2.resize(face,(255,255))
+                    cv2.imwrite("static/navegante_img_tmp/"+str(count)+".jpg",face)
+                    count+=1
+            imagesFacesPath=os.getenv("FILEPATH_DETACHMENT_TEMP")+"navegante_img_tmp"
+            facesEncodings=[]
+            facesNames=[]
+
+            for file_name in os.listdir(imagesFacesPath):
+                image_detachment=cv2.imread(imagesFacesPath+"/"+file_name)
+                image_detachment=cv2.cvtColor(image_detachment,cv2.COLOR_BGR2RGB)
+            
+                f_coding=face_recognition.face_encodings(image_detachment,known_face_locations=[(0,150,150,0)])[0]
+                facesEncodings.append(f_coding)
+                facesNames.append(file_name.split(".")[0])
+                
+            
+            
+            
+            scout = db.query(User).filter(User.sub_detachment_id == payload.get("sub_detachment_id")).all()
+            generated_name_path="/home/isabella/Developers/workspace/python/ProyectoFastApi/sistema_asistencia/static/profile"
+            for file_name_profile in os.listdir(generated_name_path):
+               
+                image_p=cv2.imread(generated_name_path+"/"+file_name_profile)
+                
+                image_p=cv2.cvtColor(image_p,cv2.COLOR_BGR2RGB)
+                
+                a_f_coding=face_recognition.face_encodings(image_p,known_face_locations=[(0,150,150,0)])[0]
+                result=face_recognition.compare_faces(facesEncodings,a_f_coding)
+            
+                if True in result:
+                    print(result)
+                    index=result.index(True)
+                    name=facesNames[index]
+                    color=(125,220,255)
+                    print(index)   
+            # for data in scout:
+               
+                
+            #     if data.image != None and data.image!="":
+            #         name_img=data.image.split("profile")[1]
+            #         print(name_img)
+            #         # image_p=cv2.imread(generated_name)
+            #         image_p=cv2.imread(generated_name_path+name_img)
+            #         image_p=cv2.cvtColor(image_p,cv2.COLOR_BGR2RGB)
+                  
+            #         a_f_coding=face_recognition.face_encodings(image_p,known_face_locations=[(0,150,150,0)])[0]
+            #         result=face_recognition.compare_faces(facesEncodings,a_f_coding)
+            #         if True in result:
+            #             print(result)
+            #             index=result.index(True)
+            #             name=facesNames[index]
+            #             color=(125,220,255)
+                       
+            # db.query(User).filter(User.identification==121212).filter(Rol.id == 13).update(
+            #     {User.image: file}, synchronize_session=False)
+            # db.commit()
+      
+            return {"detail": "changed profile picture successfully"}
+        except Exception as e:
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="The format is not a valid"
             )
     #private
             

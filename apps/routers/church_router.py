@@ -14,7 +14,6 @@ church_router=APIRouter(
 #@church_router.get("/", dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
 @church_router.get("/",dependencies=[Depends(check_comandant)],status_code=status.HTTP_200_OK)
 async def get_churchs(q: Optional[str] = None,page: Optional[int] = 1,limite: Optional[int] = 5,db:Session=Depends(get_db)):
-   
     return await ChurchRepository.all_churchs(q,page,limite,db)
 
 @church_router.get("/{id}",dependencies=[Depends(check_admin)],status_code=status.HTTP_200_OK)
@@ -25,7 +24,6 @@ async def get_church(id:int,db:Session=Depends(get_db)):
 async def create_church(church:ChurchSchema,db:Session=Depends(get_db)):
     new_church =church.dict()
     validate_church_fields(new_church)
-    
     await ChurchRepository.exist_name(new_church["name"],db)
     await ChurchRepository.exist_email(new_church["email"],db)
     result=await ChurchRepository.create_church(church,db)

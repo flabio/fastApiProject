@@ -10,15 +10,17 @@ class ChurchRepository:
             search = "%{}%".format(name)
             count_query=db.query(Church).count()
             page_offset= config_page.page_offset(page,limite)
-            
+            print("ddd->",limite)
             if limite==0:
                 limite =5
-            
+            print(limite)
             page_total= config_page.page_total_cell(count_query,limite)
         
             res=db.query(Church).order_by(Church.id.desc())
+            print(len(name))
             if name==None:
                 res= res.offset(page_offset).limit(limite).all()
+                print("hola-> data",res)
             else:    
                 res= res.filter(Church.name.ilike(search)).offset(page_offset).limit(limite).all()
             

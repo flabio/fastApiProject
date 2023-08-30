@@ -1,13 +1,11 @@
 from fastapi import APIRouter,Depends, File, UploadFile,status,HTTPException
-from fastapi.staticfiles import StaticFiles
-from PIL import Image
 from  apps.schemas.user_schemas import UserSchema,UserChangePasswordSchema
 from apps.config.db import get_db
 from sqlalchemy.orm  import Session 
 from apps.repository.user import UserRepository
 from apps.auth import check_admin,check_comandant,verify_token,oauth2_scheme
 from typing import List
-from apps.utils.profile_upload import update_upload_image_profile
+from apps.utils.profile_upload import update_upload_image_profile 
 from typing import Optional
 router=APIRouter(
     prefix="/api/v1/users",

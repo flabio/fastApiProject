@@ -26,6 +26,7 @@ async def find_rol_by_id(id:int,db:Session=Depends(get_db)):
 @rol_router.post("/",dependencies=[Depends(check_admin)], status_code=status.HTTP_201_CREATED)
 async def create_rol(rol:RolSchema,db:Session=Depends(get_db)):
     new_rol =rol.dict()
+   
     if len(new_rol["name"])==0:
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,detail="The name is required")
